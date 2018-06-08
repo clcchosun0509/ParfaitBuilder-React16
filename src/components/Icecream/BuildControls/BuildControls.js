@@ -14,7 +14,7 @@ const buildControls = (props) => (
         <p>현재 가격: <strong>{props.price.toFixed(2)}</strong></p>
         {controls.map(ctrl => ( //BuildControl 객체 하나씩 실행, ctrl은 현재 실행되고있는 객체를 나타냄
             <BuildControl 
-                key={ctrl.label} //label 하나로도 충분히 구별되므로 label로 키 설정
+                key={ctrl.type} //type 하나로도 충분히 구별되므로 type로 키 설정
                 label={ctrl.label} 
                 added={() => props.ingredientAdded(ctrl.type)}
                 removed={() => props.ingredientRemoved(ctrl.type)}
@@ -22,7 +22,8 @@ const buildControls = (props) => (
         ))}
         <button 
         className={classes.OrderButton}
-        disabled={!props.purchasable}>주문하기</button>
+        disabled={!props.purchasable}
+        onClick={props.ordered}>주문하기</button>
     </div>
 );
 
