@@ -7,10 +7,10 @@ const icecream = (props) => {
     let transformedIngredients = Object.keys(props.ingredients)
         .map(igKey => {
             return [...Array(props.ingredients[igKey])].map((_, i) => {
-                return <IcecreamIngredient key={igKey + i} type={igKey} />
+                return <IcecreamIngredient key={igKey + i} type={igKey} amount={1+i}/>
             }); 
             //Array(...)에서 ...에 숫자를 입력하면 그 숫자만큼 빈 배열을 만들어준다.
-            //igKey의 예로는 salad, vanilla, cheese 등이 있겠다.
+            //igKey의 예로는 chocolate, vanilla, mango 등이 있겠다.
             //props.ingredients[igKey]를 통해 해당하는 재료의 숫자를 얻어내서 Array(숫자)로 배열을 만들어낸다.
             //<IcecreamIngredient key={igKey + i}에서 key={igKey + i}를 사용한 이유는 다른 키들과 구별되는 키를 만들어내기 위함이다.
         }).reduce((arr, el) => { //reduce를 사용한 이유는 만약 추가한 재료가 없다면 밑의 조건문을 통해서 재료를 추가해달라고 알리기 위함이다.
