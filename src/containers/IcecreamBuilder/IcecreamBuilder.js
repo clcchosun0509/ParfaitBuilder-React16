@@ -3,6 +3,9 @@ import Icecream from '../../components/Icecream/Icecream';
 import BuildControls from '../../components/Icecream/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummary from '../../components/Icecream/OrderSummary/OrderSummary';
+import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
+import axios from '../../axios-orders';
+import Spinner from '../../components/UI/Spinner/Spinner';
 
 // 각각 재료의 가격들을 객체로 표현
 const INGREDIENT_PRICES = {
@@ -19,15 +22,22 @@ class IcecreamBuilder extends Component {
     //     this.state = {...}
     // }
     state = { //ES6에서의 state 사용 방식
-        ingredients: { //재료
-            mango: 0,
-            chocolates: 0,
-            strawberries: 0,
-            vanilla: 0
-        },
+        ingredients: null, //재료
         totalPrice: 4, //초기의 가격 4달러 설정
         purchasable: false, //구입할 수 있는지 없는지 설정
-        purchasing: false // OrderSummary의 모달창의 팝업 여부를 설정
+        purchasing: false, // OrderSummary의 모달창의 팝업 여부를 설정
+        loading: false, //true일 경우 스피너(로딩창)가 뜨도록 설정
+        error: false
+    }
+    
+    componentDidMount () { //재료 객체를 firebase에 가져오기 위함
+        axios.get('https://react-my-parfait.firebaseio.com/ingredients.json')
+            .then(response => {
+                this.setState({ingredients: response.data}); //firebase에서 가져온 재료 객체로 설정한다.
+            })
+            .catch(error => {
+                this.setState({error: true});
+            });
     }
     
     updatePurchaseState (ingredients) { //주문하기 버튼의 상태 수정용 함수
@@ -80,8 +90,31 @@ class IcecreamBuilder extends Component {
         this.setState({purchasing: false});
     }
     
-    purchaseContinueHandler = () => {
-        alert('계속 버튼을 누르셨네요!');
+    purchaseContinueHandler = () => { //주문하기를 누른 후 계속 버튼을 눌렀을 때 작동할 핸들러
+        this.setState({loading: true});
+        const order = {
+            ingredients: this.state.ingredients,
+            price: this.state.totalPrice,
+            customer: {
+                name: "박건우",
+                address: {
+                    street: '수완로 33번길 76',
+                    zipCode: '62306',
+                    country: 'South Korea'
+                },
+                email: 'test@test.com'
+            },
+            deliveryMethod: '가능한 빠르게'
+        }
+        //post request를 사용한다.
+        //firebase에서는 MongoDB와 비슷한 형태의 데이터베이스를 사용하는데, post request를 할 때 꼭 /???.json 형태로 써야 한다.
+        axios.post('/orders.json', order)
+            .then(response => { //response 확인용
+                this.setState({loading:false, purchasing: false});  //spinner 동작이 멈추도록 loading에 false 값을 주었다.
+            })                                                      //purchasing도 false 값을 주었는데, modal창을 닫도록 하기 위함이다.
+            .catch(error => { //error 확인용
+                this.setState({loading:false, purchasing: false}); //에러가 났을경우에도 spinner 동작이 멈추도록 하였다.
+            }); 
     }
     
     render () {
@@ -91,20 +124,12 @@ class IcecreamBuilder extends Component {
         for(let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0; //예시: {strawberries: true, vanilla: false 등..}
         }
+        let orderSummary = null; 
         
-        //Modal을 사용하여,고객이 주문하기를 눌렀을 때 모달창을 띄워준다.
-        //modalClosed는 백드롭에서 사용된다.
-        //Icecream은 아이스크림을 시각적으로 보여준다.
-        //BuildControls는 재료의 추가와 제거용으로 사용
-        return (
+        let icecream = this.state.error ? <p>재료들을 불러오는데 실패하였습니다.</p> : <Spinner />; //error가 true일 경우 firebase로부터 ingredients를 받아오는 데 실패한것이다.
+        if (this.state.ingredients) { //만약 ingredients가 전부 갖춰졌다면, icecream은 Spinner대신 아래의 컴포넌트들을 얻는다.
+            icecream = (
             <Fragment>
-                <Modal show={this.state.purchasing} modalClosed={this.purchaseCancelHandler}>
-                    <OrderSummary 
-                        ingredients= {this.state.ingredients}
-                        price={this.state.totalPrice}
-                        purchaseCancelled={this.purchaseCancelHandler}
-                        purchaseContinued={this.purchaseContinueHandler}/>
-                </Modal>
                 <Icecream ingredients={this.state.ingredients}/>
                 <BuildControls 
                     ingredientAdded={this.addIngredientHandler}
@@ -113,9 +138,31 @@ class IcecreamBuilder extends Component {
                     purchasable={this.state.purchasable}
                     ordered={this.purchaseHandler}
                     price={this.state.totalPrice} />
+            </Fragment>);
+            orderSummary = <OrderSummary //로딩이 전부 이루어졌다면 loading은 false로 밑의 if문이 실행 안된다.
+                ingredients= {this.state.ingredients}
+                price={this.state.totalPrice}
+                purchaseCancelled={this.purchaseCancelHandler}
+                purchaseContinued={this.purchaseContinueHandler}/>;
+        }
+        if (this.state.loading) { //true일 경우 아직 로딩이 전부 안됬으므로 Spinner가 뜨도록 설정
+            orderSummary = <Spinner />;
+        }
+        
+        //Modal을 사용하여,고객이 주문하기를 눌렀을 때 모달창을 띄워준다.
+        //modalClosed는 백드롭에서 사용된다.
+        //Icecream은 아이스크림을 시각적으로 보여준다.
+        //BuildControls는 재료의 추가와 제거용으로 사용
+        return (
+            <Fragment>
+                <Modal show={this.state.purchasing} modalClosed={this.purchaseCancelHandler}>
+                    {orderSummary}
+                </Modal>
+                {icecream}
             </Fragment>    
         );
     }
 }
-
-export default IcecreamBuilder;
+//withErrorHandler로 감쌌는데, 두번째 파라미터로 axios도 같이 보냈다.
+//axios에 에러정보가 있을시에 withErrorHandler에서 처리한다.
+export default withErrorHandler(IcecreamBuilder, axios); 

@@ -6,7 +6,7 @@ import Backdrop from '../Backdrop/Backdrop';
 //퍼포먼스의 향상을 위해 Modal을 Class Based 컴포넌트로 바꾸었다.
 class Modal extends Component {
     shouldComponentUpdate(nextProps, nextState) { //주문하기 버튼을 누르기 전까지는 rerendering을 하지 않도록 바꾸었다.
-            return nextProps.show !== this.props.show;
+            return nextProps.show !== this.props.show || nextProps.children !== this.props.children; //children 값이 다른 경우 Spinner를 보여주도록 하였다.
     }
     
     render() {
