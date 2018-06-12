@@ -91,30 +91,16 @@ class IcecreamBuilder extends Component {
     }
     
     purchaseContinueHandler = () => { //주문하기를 누른 후 계속 버튼을 눌렀을 때 작동할 핸들러
-        this.setState({loading: true});
-        const order = {
-            ingredients: this.state.ingredients,
-            price: this.state.totalPrice,
-            customer: {
-                name: "박건우",
-                address: {
-                    street: '수완로 33번길 76',
-                    zipCode: '62306',
-                    country: 'South Korea'
-                },
-                email: 'test@test.com'
-            },
-            deliveryMethod: '가능한 빠르게'
+        const queryParams = []; //this.props.history.search에 넣을 string을 위해 임시로 만든 배열
+        for (let i in this.state.ingredients) { //queryParams 배열에 [mango=2, strawberries=3, vanilla=1, chocolates=2] 와 같은 형태로 만든다.
+            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i])); //예: mango=3
         }
-        //post request를 사용한다.
-        //firebase에서는 MongoDB와 비슷한 형태의 데이터베이스를 사용하는데, post request를 할 때 꼭 /???.json 형태로 써야 한다.
-        axios.post('/orders.json', order)
-            .then(response => { //response 확인용
-                this.setState({loading:false, purchasing: false});  //spinner 동작이 멈추도록 loading에 false 값을 주었다.
-            })                                                      //purchasing도 false 값을 주었는데, modal창을 닫도록 하기 위함이다.
-            .catch(error => { //error 확인용
-                this.setState({loading:false, purchasing: false}); //에러가 났을경우에도 spinner 동작이 멈추도록 하였다.
-            }); 
+        queryParams.push('price='+this.state.totalPrice); //Checkout에 totalPrice 값도 보내기 위해 추가
+        const queryString = queryParams.join('&'); //최종적인 query 형태로 각 배열의 요소들을 &로 연결시켰다.
+        this.props.history.push({
+            pathname: '/checkout',
+            search: '?' + queryString
+        }); // checkout 페이지를 stack에 쌓으면서 이동시킨다.
     }
     
     render () {
