@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {connect} from 'react-redux';
 import Button from '../../../components/UI/Button/Button';
 import classes from './ContactData.css';
 import axios from '../../../axios-orders';
@@ -45,7 +46,8 @@ class ContactData extends Component {
                 validation: {
                     required: true,
                     minLength: 5,
-                    maxLength: 5
+                    maxLength: 5,
+                    isNumeric: true //숫자 형식인가?
                 },
                 valid: false,
                 touched: false
@@ -58,7 +60,8 @@ class ContactData extends Component {
                 },
                 value: '',
                 validation: {
-                    required: true
+                    required: true,
+                    isEmail: true   //email 형식인가?
                 },
                 valid: false,
                 touched: false
@@ -95,7 +98,7 @@ class ContactData extends Component {
             formData[formElementIdentifier] = this.state.orderForm[formElementIdentifier].value;
         }
         const order = {
-            ingredients: this.props.ingredients,
+            ingredients: this.props.ings,
             price: this.props.price,
             orderData: formData //회원의 개인정보도 같이 order 목록에 추가한다.
             
@@ -128,6 +131,16 @@ class ContactData extends Component {
         
         if (rules.maxLength) {  //string의 최대길이 검사
             isValid = value.length <= rules.minLength && isValid;
+        }
+        
+        if (rules.isEmail) {    //정규표현식 이메일 검사
+            const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+            isValid = pattern.test(value) && isValid
+        }
+
+        if (rules.isNumeric) {   //정규표현식 숫자 검사
+            const pattern = /^\d+$/;
+            isValid = pattern.test(value) && isValid
         }
         
         return isValid;     //유효한 상태라면 true값을 아니면 false값을 전달한다.
@@ -195,4 +208,11 @@ class ContactData extends Component {
     }
 }
 
-export default ContactData;
+const mapStateToProps = state => {
+    return {
+        ings: state.ingredients,
+        price: state.totalPrice
+    }
+};
+
+export default connect(mapStateToProps)(ContactData);
