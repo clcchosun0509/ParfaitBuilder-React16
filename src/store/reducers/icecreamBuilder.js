@@ -1,13 +1,9 @@
-import * as actionTypes from './actions';
+import * as actionTypes from '../actions/actionTypes';
 
 const initialState = {
-    ingredients: {
-        mango: 0,
-        strawberries: 0,
-        vanilla: 1,
-        chocolates: 0
-    }, //재료
-    totalPrice: 4 //초기의 가격 4달러 설정
+    ingredients: null, //firebase에서 데이터를 얻기 때문에 설정 필요 없음
+    totalPrice: 4, //초기의 가격 4달러 설정
+    error: false
 };
 
 // 각각 재료의 가격들을 객체로 표현
@@ -39,6 +35,18 @@ const reducer = (state = initialState, action) => {
                 },
                 totalPrice: state.totalPrice - INGREDIENT_PRICES[action.ingredientName]
             };
+        case actionTypes.SET_INGREDIENTS: //firebase로부터 재료를 불러와 초기화 한다.
+            return {
+                ...state,
+                ingredients: action.ingredients,
+                error: false,    //혹시 이전에 error가 true였어도 초기화하는데 성공했으므로, false로 설정한다.
+                totalPrice: 4
+            };
+        case actionTypes.FETCH_INGREDIENTS_FAILED: //firebase로부터 재료를 초기화시키는데 실패했을 경우
+            return {
+                ...state,
+                error: true
+            }
         default:
             return state;   //위의 case 조건문들이 모두 만족되지 못할경우 state를 그대로 반환한다.
     }

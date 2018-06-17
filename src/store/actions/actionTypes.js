@@ -1,0 +1,13 @@
+export const ADD_INGREDIENTS = 'ADD_INGREDIENTS';   //재료 1개 추가
+export const REMOVE_INGREDIENTS = 'REMOVE_INGREDIENTS'; //재료 1개 제거
+export const SET_INGREDIENTS = 'SET_INGREDIENTS';   //재료 firebase 데이터로 초기화
+export const FETCH_INGREDIENTS_FAILED = 'FETCH_INGREDIENTS_FAILED'; //firebase로부터 데이터를 얻어내는데 실패
+
+export const PURCHASE_ICECREAM_START = 'PURCHASE_ICECREAM_START'; //주문 요청이 시작했을 경우
+export const PURCHASE_ICECREAM_SUCCESS = 'PURCHASE_ICECREAM_SUCCESS'; //주문이 에러없이 완료되었을 경우
+export const PURCHASE_ICECREAM_FAIL = 'PURCHASE_ICECREAM_FAIL'; //주문에 에러가 발생
+export const PURCHASE_INIT = 'PURCHASE_INIT';
+
+export const FETCH_ORDERS_START = 'FETCH_ORDERS_START';
+export const FETCH_ORDERS_SUCCESS = 'FETCH_ORDERS_SUCCESS';
+export const FETCH_ORDERS_FAIL = 'FETCH_ORDERS_FAIL';

@@ -5,6 +5,8 @@ import classes from './ContactData.css';
 import axios from '../../../axios-orders';
 import Spinner from '../../../components/UI/Spinner/Spinner';
 import Input from '../../../components/UI/Input/Input';
+import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import * as actions from '../../../store/actions/index';
 
 //회원의 개인정보를 처리할 컴포넌트
 class ContactData extends Component {
@@ -87,12 +89,12 @@ class ContactData extends Component {
             postalCode: ''
         },
         formIsValid: false, //주문하기 전에, 작성된 회원의 개인정보가 유효한지 아닌지 판단한다.
-        loading: false
+        // loading: false
     }
     
     orderHandler = (event) => {
         event.preventDefault(); //send request를 보내서 페이지가 reloading 하는것을 방지
-        this.setState({loading: true});
+        // this.setState({loading: true});
         const formData = {};    //orderForm[???].value 값을 저장하기 위한 객체
         for (let formElementIdentifier in this.state.orderForm) {
             formData[formElementIdentifier] = this.state.orderForm[formElementIdentifier].value;
@@ -103,16 +105,8 @@ class ContactData extends Component {
             orderData: formData //회원의 개인정보도 같이 order 목록에 추가한다.
             
         }
-        //post request를 사용한다.
-        //firebase에서는 MongoDB와 비슷한 형태의 데이터베이스를 사용하는데, post request를 할 때 꼭 /???.json 형태로 써야 한다.
-        axios.post('/orders.json', order)
-            .then(response => { //response 확인용
-                this.setState({loading:false});  //spinner 동작이 멈추도록 loading에 false 값을 주었다.
-                this.props.history.push('/');   // '/'페이지로 리다이렉트 시키기 위함
-            })
-            .catch(error => { //error 확인용
-                this.setState({loading:false}); //에러가 났을경우에도 spinner 동작이 멈추도록 하였다.
-            }); 
+        this.props.onOrderIcecream(order);
+         
     }
     
     checkValidity(value, rules) {   //유효성 검증을 한다.
@@ -196,7 +190,7 @@ class ContactData extends Component {
                 <Button btnType="Success" disabled={!this.state.formIsValid}>주문</Button>
             </form>    
         );
-        if (this.state.loading) {
+        if (this.props.loading) {
             form = <Spinner />;
         }
         return (
@@ -210,9 +204,16 @@ class ContactData extends Component {
 
 const mapStateToProps = state => {
     return {
-        ings: state.ingredients,
-        price: state.totalPrice
+        ings: state.icecreamBuilder.ingredients,
+        price: state.icecreamBuilder.totalPrice,
+        loading: state.order.loading
     }
 };
 
-export default connect(mapStateToProps)(ContactData);
+const mapDispatchToProps = dispatch => {
+    return {
+        onOrderIcecream: (orderData) => dispatch(actions.purchaseIcecream(orderData))
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));

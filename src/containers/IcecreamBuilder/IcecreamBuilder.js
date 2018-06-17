@@ -5,9 +5,9 @@ import BuildControls from '../../components/Icecream/BuildControls/BuildControls
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummary from '../../components/Icecream/OrderSummary/OrderSummary';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
-import axios from '../../axios-orders';
 import Spinner from '../../components/UI/Spinner/Spinner';
-import * as actionTypes from '../../store/actions';
+import * as actions from '../../store/actions/index'; //index 글자를 빠트려도 자동으로 index.js 파일을 찾는다.
+import axios from '../../axios-orders';
 
 //아이스크림과 아이스크림 제작 컨트롤러를 사용한 stateful 컴포넌트
 //Layout.js는 부모 컴포넌트
@@ -21,18 +21,12 @@ class IcecreamBuilder extends Component {
         // totalPrice: 4, //초기의 가격 4달러 설정
         // purchasable: false, //구입할 수 있는지 없는지 설정
         purchasing: false, // OrderSummary의 모달창의 팝업 여부를 설정
-        loading: false, //true일 경우 스피너(로딩창)가 뜨도록 설정
-        error: false
+        // loading: false, //true일 경우 스피너(로딩창)가 뜨도록 설정
+        // error: false
     }
     
     componentDidMount () { //재료 객체를 firebase에 가져오기 위함
-        // axios.get('https://react-my-parfait.firebaseio.com/ingredients.json')
-        //     .then(response => {
-        //         this.setState({ingredients: response.data}); //firebase에서 가져온 재료 객체로 설정한다.
-        //     })
-        //     .catch(error => {
-        //         this.setState({error: true});
-        //     });
+        this.props.onInitIngredients();
     }
     
     updatePurchaseState (ingredients) { //주문하기 버튼의 상태 수정용 함수
@@ -98,6 +92,7 @@ class IcecreamBuilder extends Component {
         //     pathname: '/checkout',
         //     search: '?' + queryString
         // }); // checkout 페이지를 stack에 쌓으면서 이동시킨다.
+        this.props.onInitPurchase();
         this.props.history.push('/checkout');
     }
     
@@ -111,7 +106,7 @@ class IcecreamBuilder extends Component {
         }
         let orderSummary = null; 
         
-        let icecream = this.state.error ? <p>재료들을 불러오는데 실패하였습니다.</p> : <Spinner />; //error가 true일 경우 firebase로부터 ingredients를 받아오는 데 실패한것이다.
+        let icecream = this.props.error ? <p>재료들을 불러오는데 실패하였습니다.</p> : <Spinner />; //error가 true일 경우 firebase로부터 ingredients를 받아오는 데 실패한것이다.
         if (this.props.ings) { //만약 ingredients가 전부 갖춰졌다면, icecream은 Spinner대신 아래의 컴포넌트들을 얻는다.
             icecream = (
             <Fragment>
@@ -130,9 +125,9 @@ class IcecreamBuilder extends Component {
                 purchaseCancelled={this.purchaseCancelHandler}
                 purchaseContinued={this.purchaseContinueHandler}/>;
         }
-        if (this.state.loading) { //true일 경우 아직 로딩이 전부 안됬으므로 Spinner가 뜨도록 설정
-            orderSummary = <Spinner />;
-        }
+        // if (this.state.loading) { //true일 경우 아직 로딩이 전부 안됬으므로 Spinner가 뜨도록 설정
+        //     orderSummary = <Spinner />;
+        // }
         
         //Modal을 사용하여,고객이 주문하기를 눌렀을 때 모달창을 띄워준다.
         //modalClosed는 백드롭에서 사용된다.
@@ -153,17 +148,21 @@ class IcecreamBuilder extends Component {
 //store의 상태를 파라미터로 받아오는 함수로서, 컴포넌트에 상태로 넣어줄 props를 반환한다.
 const mapStateToProps = state => {
     return {
-      ings: state.ingredients,
-      price: state.totalPrice
+      ings: state.icecreamBuilder.ingredients,
+      price: state.icecreamBuilder.totalPrice,
+      error: state.icecreamBuilder.error
     };
 }
 
 //props 값으로 넣어 줄 액션 함수들을 정의한다.
-//dispatch로 action type과 payload를 store에게 전달한다. 후에 store는 action type과 payload에 적절한 상태 업데이트를 한다.
+//(더 이상 안쓰임)dispatch로 action type과 payload를 store에게 전달한다. 후에 store는 action type과 payload에 적절한 상태 업데이트를 한다.
+//dispatch로 action type과 payload를 직접 전달하는 대신에 action creater에서 처리하도록 하였다.
 const mapDispatchToProps = dispatch => {
     return {
-        onIngredientAdded: (ingName) => dispatch({type: actionTypes.ADD_INGREDIENTS, ingredientName: ingName}),
-        onIngredientRemoved: (ingName) => dispatch({type: actionTypes.REMOVE_INGREDIENTS, ingredientName: ingName})
+        onIngredientAdded: (ingName) => dispatch(actions.addIngredient(ingName)),
+        onIngredientRemoved: (ingName) => dispatch(actions.removeIngredient(ingName)),
+        onInitIngredients : () => dispatch(actions.initIngredients()),
+        onInitPurchase: () => dispatch(actions.purchaseInit())
     };
 }
 
