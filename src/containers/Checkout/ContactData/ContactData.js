@@ -89,12 +89,10 @@ class ContactData extends Component {
             postalCode: ''
         },
         formIsValid: false, //주문하기 전에, 작성된 회원의 개인정보가 유효한지 아닌지 판단한다.
-        // loading: false
     }
     
     orderHandler = (event) => {
         event.preventDefault(); //send request를 보내서 페이지가 reloading 하는것을 방지
-        // this.setState({loading: true});
         const formData = {};    //orderForm[???].value 값을 저장하기 위한 객체
         for (let formElementIdentifier in this.state.orderForm) {
             formData[formElementIdentifier] = this.state.orderForm[formElementIdentifier].value;
@@ -145,7 +143,6 @@ class ContactData extends Component {
     //하지만 우리가 원하는 것은 orderForm[???].value의 값을 업데이트 하는 것뿐이기 때문에 먼저 orderForm을 ...로 복사하고
     //그 다음 orderForm[???]를 ...로 복사한 후, orderForm[???].value의 값을 수정하고, setState로 반영하면 모든 작업이 끝난다.
     inputChangedHandler = (event, inputIdentifier) => { 
-        //console.log(event.target.value);
         const updatedOrderForm = {
             ...this.state.orderForm
         };
